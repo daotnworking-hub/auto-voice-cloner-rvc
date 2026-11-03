@@ -1,0 +1,21 @@
+# Environment & Cache
+env/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Temporary files
+temp_downloads/*
+!temp_downloads/.gitkeep
+
+# Logs & Trained Large Artifacts
+*.log
+logs/
+.vscode/
+.idea/
+
+# OS files
+Thumbs.db
+desktop.ini

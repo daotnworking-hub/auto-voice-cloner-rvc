@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoVoiceStudio - Clone Voice Tự Động RTX 4060</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Header -->
+    <header class="studio-header">
+      <div class="header-brand">
+        <div class="brand-icon">🎙️</div>
+        <div>
+          <h1>AutoVoiceStudio <span class="badge-pro">RTX 4060 Edition</span></h1>
+          <p class="subtitle">Hệ thống bóc tách Vocal YouTube tự động & Huấn luyện Voice Clone Local 100%</p>
+        </div>
+      </div>
+      <div class="header-status">
+        <div class="status-pill online">
+          <span class="dot"></span> GPU: NVIDIA RTX 4060 (8GB VRAM)
+        </div>
+        <div class="status-pill local">
+          <span class="dot"></span> 100% Offline Local
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="studio-main">
+      <!-- Left Column: Bank selection & Ingestion -->
+      <section class="panel panel-left">
+        <!-- Voice Bank Selector -->
+        <div class="card bank-selector-card">
+          <div class="card-header">
+            <h2>Ngân Hàng Giọng Nói</h2>
+            <button class="btn btn-sm btn-outline" id="btnNewBankModal">+ Tạo Giọng Mới</button>
+          </div>
+          <div class="bank-select-row">
+            <select id="selectBank" class="input-select"></select>
+            <button class="btn btn-secondary" id="btnRefreshBank">🔄 Làm Mới</button>
+          </div>
+        </div>
+
+        <!-- Voice Completeness % Meter -->
+        <div class="card meter-card">
+          <div class="card-header">
+            <h2>Độ Hoàn Hảo Dữ Liệu (Voice Completeness)</h2>
+            <span class="target-badge">Mục tiêu: 8 phút (100%)</span>
+          </div>
+
+          <div class="meter-visual">
+            <div class="meter-info">
+              <div class="meter-number" id="meterPercent">0%</div>
+              <div class="meter-duration" id="meterDuration">0 phút 0 giây / 8 phút chuẩn</div>
+            </div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" id="meterFill" style="width: 0%;"></div>
+            </div>
+            <div class="meter-milestones">
+              <span>0%</span>
+              <span>25% (Sơ Khai)</span>
+              <span>60% (Cơ Bản)</span>
+              <span>85% (Rất Tốt)</span>
+              <span>100% (Hoàn Hảo)</span>
+            </div>
+          </div>
+
+          <div class="meter-eval" id="meterEval">
+            <span class="badge" id="qualityBadge">Chưa đủ dữ liệu</span>
+            <p id="qualityText">Hãy nạp thêm clip YouTube hoặc file thoại để đạt 100% độ giống giọng gốc.</p>
+          </div>
+        </div>
+
+        <!-- Audio Ingestion (YouTube & Upload) -->
+        <div class="card ingest-card">
+          <div class="card-header">
+            <h2>Nạp Âm Thanh Tự Động (AI Demucs GPU Lọc Sạch BGM)</h2>
+          </div>
+
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="tabYoutube">📺 Link YouTube</button>
+            <button class="tab-btn" data-tab="tabUpload">📁 Tải File Lên (MP3/WAV/MP4)</button>
+          </div>
+
+          <!-- YouTube Tab -->
+          <div class="tab-content active" id="tabYoutube">
+            <p class="tab-desc">Dán link YouTube (Video thông thường hoặc Shorts). AI sẽ tự tải và bóc sạch 100% nhạc nền:</p>
+            <div class="input-action-group">
+              <input type="text" id="inputYoutubeUrl" class="input-text" placeholder="https://www.youtube.com/watch?v=... hoặc Shorts">
+              <button class="btn btn-primary" id="btnIngestYoutube">⚡ Bóc Tách & Nạp</button>
+            </div>
+            <div class="ingest-loading" id="ytLoading" style="display: none;">
+              <div class="spinner"></div>
+              <span>Đang tải từ YouTube và chạy Demucs tách nhạc nền trên RTX 4060... (Có thể mất 20-40 giây)</span>
+            </div>
+          </div>
+
+          <!-- Upload Tab -->
+          <div class="tab-content" id="tabUpload" style="display: none;">
+            <p class="tab-desc">Kéo thả file âm thanh/video vào đây. Hệ thống sẽ tự lọc vocal 48kHz:</p>
+            <div class="drop-zone" id="dropZone">
+              <div class="drop-icon">📤</div>
+              <p>Kéo thả file hoặc <strong>chọn từ máy tính</strong></p>
+              <span class="drop-hint">Hỗ trợ MP3, WAV, M4A, FLAC, MP4, MKV</span>
+              <input type="file" id="fileUploadInput" accept="audio/*,video/*" style="display:none;">
+            </div>
+            <div class="ingest-loading" id="uploadLoading" style="display: none;">
+              <div class="spinner"></div>
+              <span>Đang chạy AI tách vocal...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clean Dataset List -->
+        <div class="card dataset-card">
+          <div class="card-header">
+            <h2>Danh Sách Vocal Sạch Trong Ngân Hàng (<span id="clipCount">0</span> clip)</h2>
+          </div>
+          <div class="clip-list" id="clipList">
+            <div class="empty-state">Chưa có clip nào.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Training & Testing Studio -->
+      <section class="panel panel-right">
+        <!-- 1-Click RTX 4060 Training -->
+        <div class="card train-card">
+          <div class="card-header">
+            <h2>Huấn Luyện AI Tối Ưu Cho RTX 4060 (1-Click Train)</h2>
+            <span class="hw-badge">i5-14400F • 32GB RAM • RTX 4060</span>
+          </div>
+
+          <div class="train-config-grid">
+            <div class="cfg-item">
+              <label>Số Epochs (Vòng Lặp)</label>
+              <input type="number" id="inputEpochs" class="input-text" value="250" min="50" max="600">
+              <span class="cfg-desc">250 epochs cho chất lượng chuẩn phòng thu</span>
+            </div>
+            <div class="cfg-item">
+              <label>Batch Size (GPU)</label>
+              <input type="number" id="inputBatchSize" class="input-text" value="8" min="2" max="16">
+              <span class="cfg-desc">8 batch tối ưu tuyệt đối cho 8GB VRAM</span>
+            </div>
+            <div class="cfg-item">
+              <label>Tần Số Mẫu (HiFi)</label>
+              <input type="text" class="input-text" value="48,000 Hz (HiFi-GAN v2)" disabled>
+              <span class="cfg-desc">Âm thanh 48k trung thực tối đa</span>
+            </div>
+            <div class="cfg-item">
+              <label>Thuật Toán Cao Độ</label>
+              <input type="text" class="input-text" value="RMVPE (GPU AI Accel)" disabled>
+              <span class="cfg-desc">Không lệch tone, mượt mà</span>
+            </div>
+          </div>
+
+          <div class="train-actions">
+            <button class="btn btn-success btn-lg" id="btnStartTrain">🚀 BẮT ĐẦU HUẤN LUYỆN (1-CLICK TRAIN)</button>
+            <button class="btn btn-danger btn-lg" id="btnStopTrain" style="display:none;">⛔ DỪNG TIẾN TRÌNH</button>
+          </div>
+
+          <!-- Training Progress Bar -->
+          <div class="train-progress-box" id="trainProgressBox" style="display: none;">
+            <div class="step-title" id="trainStepName">Đang khởi động...</div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill progress-gradient" id="trainFill" style="width: 0%;"></div>
+            </div>
+            <div class="train-percent-text" id="trainPercentText">0.0%</div>
+          </div>
+
+          <!-- Real-Time Training Console -->
+          <div class="terminal-box">
+            <div class="terminal-header">
+              <span>🖥️ Terminal Huấn Luyện Thời Gian Thực</span>
+              <span class="terminal-status" id="terminalStatus">IDLE</span>
+            </div>
+            <div class="terminal-body" id="terminalBody">
+              <div class="term-line info">[System] Sẵn sàng huấn luyện mô hình giọng nói.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Voice Testing & TTS Studio -->
+        <div class="card test-card">
+          <div class="card-header">
+            <h2>Phòng Thu Thử Giọng (TTS + Voice Clone Infer)</h2>
+            <span class="badge-status" id="modelStatusBadge">Kiểm tra Model...</span>
+          </div>
+
+          <div class="tts-form">
+            <label>Nội Dung Tiếng Việt Muốn Giọng Đọc:</label>
+            <textarea id="ttsTextInput" class="input-textarea" rows="4" placeholder="Nhập văn bản tiếng Việt bất kỳ vào đây để nghe thử giọng sau khi clone... (Ví dụ: Xin chào các bạn, hôm nay tôi sẽ bình luận trận cầu kinh điển tối nay...)"></textarea>
+
+            <div class="tts-controls">
+              <div class="control-group">
+                <label>Giọng Nền (Base Voice)</label>
+                <select id="ttsVoiceSelect" class="input-select">
+                  <option value="vi-VN-NamMinhNeural">Nam Minh (Giọng Nam Chuẩn Việt)</option>
+                  <option value="vi-VN-HoaiMyNeural">Hoài My (Giọng Nữ Chuẩn Việt)</option>
+                </select>
+              </div>
+              <div class="control-group">
+                <label>Độ Giống Đặc Trưng (Index Rate): <strong id="indexRateVal">0.95</strong></label>
+                <input type="range" id="inputIndexRate" min="0.5" max="1.0" step="0.05" value="0.95">
+              </div>
+              <div class="control-group">
+                <label>Cao Độ (Pitch Shift): <strong id="pitchVal">0</strong></label>
+                <input type="range" id="inputPitch" min="-12" max="12" step="1" value="0">
+              </div>
+            </div>
+
+            <button class="btn btn-primary btn-lg" id="btnGenerateTTS">⚡ SINH GIỌNG CLONE & PHÁT NGAY</button>
+
+            <div class="tts-result" id="ttsResult" style="display:none;">
+              <h3>Kết Quả Giọng Clone:</h3>
+              <audio id="audioPlayer" controls style="width: 100%;"></audio>
+              <a id="btnDownloadAudio" class="btn btn-outline btn-sm" download>⬇️ Tải File Âm Thanh WAV</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal: Create New Bank -->
+  <div class="modal-backdrop" id="modalNewBank" style="display:none;">
+    <div class="modal-box">
+      <h3>Tạo Ngân Hàng Giọng Mới</h3>
+      <p>Nhập mã định danh nhân vật (ví dụ: <code>blv_mai_anh_tai</code>, <code>ronaldo</code>, <code>mc_ngoc_ngan</code>):</p>
+      <input type="text" id="newBankId" class="input-text" placeholder="ma_nhan_vat">
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="btnCloseModal">Hủy</button>
+        <button class="btn btn-primary" id="btnConfirmNewBank">Tạo Ngay</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
